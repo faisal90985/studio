@@ -9,10 +9,11 @@ import { useToast } from '@/hooks/use-toast';
 import type { NamazTimings, AuthProps } from '@/app/lib/types';
 import { Separator } from '../ui/separator';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { DialogFooter } from '../ui/dialog';
 import { Skeleton } from '../ui/skeleton';
+import { namazTimings as defaultNamazTimings } from '@/app/lib/data';
 
 interface MasjidModalProps extends Omit<AuthProps, 'isManagementLoggedIn' | 'setIsManagementLoggedIn' | 'isMartOwnerLoggedIn' | 'setIsMartOwnerLoggedIn'>{
   isOpen: boolean;
@@ -33,8 +34,16 @@ const MasjidModal = ({ isOpen, onOpenChange, isAdminLoggedIn }: MasjidModalProps
     if (timingsData) {
       setTimings(timingsData);
       setEditedTimings(timingsData);
+    } else if (!isLoading && !error) {
+      // If no data and not loading/error, maybe it doesn't exist.
+      // Let's create it with defaults.
+      if (firestore) {
+        setDoc(doc(firestore, 'namazTimings', 'times'), defaultNamazTimings);
+      }
+      setTimings(defaultNamazTimings);
+      setEditedTimings(defaultNamazTimings);
     }
-  }, [timingsData]);
+  }, [timingsData, isLoading, error, firestore]);
 
   const handleSave = () => {
     if (editedTimings && firestore) {
@@ -86,15 +95,13 @@ const MasjidModal = ({ isOpen, onOpenChange, isAdminLoggedIn }: MasjidModalProps
   );
 
   const renderContent = () => {
-    if (isLoading) {
+    if (isLoading || !timings || !editedTimings) {
       return renderLoadingSkeleton();
     }
     if (error) {
       return <p className='text-center text-destructive py-4'>Could not load timings. Please check your connection.</p>
     }
-    if (!timings || !editedTimings) {
-      return <p className='text-center text-muted-foreground py-4'>Namaz timings are not available at the moment.</p>
-    }
+
 
     const namazRows = [
       { name: 'Fajr', time: formatTime(timings.fajr) },

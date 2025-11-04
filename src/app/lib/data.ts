@@ -10,7 +10,7 @@ export const namazTimings: NamazTimings = {
     asar: '16:45',
     maghrib: '18:00',
     isha: '20:00',
-    jumma: '13:15',
+    jumma: '14:00',
     imam: 'janab zulfiqar sahab',
     moazin: 'janab salman sahab',
     khadim: 'janab khalil sahab'
