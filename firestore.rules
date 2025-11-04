@@ -16,19 +16,19 @@ service cloud.firestore {
     match /advertisements/{advertisementId} {
       allow get, list: if true;
       allow create: if isSignedIn();
-      allow update, delete: if false; // Simplification: edits/deletes handled by app logic
+      allow update, delete: if false;
     }
 
     match /managementPosts/{managementPostId} {
       allow get, list: if true;
-      allow create: if isSignedIn(); // Management login checked in app
-      allow update, delete: if isSignedIn(); // Management login checked in app
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn();
     }
 
     match /complaints/{complaintId} {
       allow get, list: if true;
       allow create: if isSignedIn();
-      allow update: if isSignedIn(); // Management login checked in app
+      allow update: if isSignedIn();
       allow delete: if false;
     }
 
@@ -39,8 +39,8 @@ service cloud.firestore {
     }
 
     match /approvedPhones/{approvedPhoneId} {
-      allow get, list: if true; // Required for client-side checks
-      allow write: if true; // Allow admin to write from the app
+      allow get, list: if true;
+      allow write: if true;
     }
 
     match /managementPasswords/{managementPasswordId} {
@@ -50,12 +50,12 @@ service cloud.firestore {
 
     match /martStatus/{martStatusId} {
       allow get, list: if true;
-      allow write: if isSignedIn(); // Allow mart owner to update
+      allow write: if isSignedIn();
     }
 
     match /namazTimings/{timingId} {
       allow get, list: if true;
-      allow write: if isSignedIn(); // Allow admin to update
+      allow write: if isSignedIn();
     }
   }
 }
