@@ -55,7 +55,7 @@ service cloud.firestore {
      */
     match /advertisements/{advertisementId} {
       allow get, list: if true;
-      allow create: if isSignedIn() && isApprovedPhone();
+      allow create: if isSignedIn();
       allow update, delete: if false;
     }
 
@@ -86,7 +86,7 @@ service cloud.firestore {
      */
     match /complaints/{complaintId} {
       allow get, list: if true;
-      allow create: if isSignedIn() && isApprovedPhone();
+      allow create: if isSignedIn();
       allow update: if isSignedIn() && isValidManagementPassword() && resource != null;
       allow delete: if false;
     }
@@ -102,7 +102,7 @@ service cloud.firestore {
      */
     match /emergencyContacts/{emergencyContactId} {
       allow get, list: if true;
-      allow create: if isSignedIn() && isApprovedPhone();
+      allow create: if isSignedIn();
       allow update, delete: if false;
     }
 
@@ -116,16 +116,6 @@ service cloud.firestore {
     match /approvedPhones/{approvedPhoneId} {
       allow get, list: if true;
       allow write: if true;
-    }
-    
-    match /adminPasswords/{passwordId} {
-        allow get, list: if true;
-        allow create, update, delete: if false;
-    }
-
-    match /martPasswords/{passwordId} {
-        allow get, list: if true;
-        allow create, update, delete: if false;
     }
 
     /**
@@ -162,12 +152,6 @@ service cloud.firestore {
     match /namazTimings/{timingId} {
         allow get, list: if true;
         allow write: if true; // Allow admin to update
-    }
-
-    function isApprovedPhone() {
-      // This function may need to be adjusted based on how phone numbers are stored and verified.
-      // For now, it checks if a document exists with the user's phone number as the ID.
-      return exists(/databases/$(database)/documents/approvedPhones/$(request.auth.token.phone_number));
     }
 
     function isValidManagementPassword() {
