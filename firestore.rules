@@ -115,7 +115,7 @@ service cloud.firestore {
      */
     match /approvedPhones/{approvedPhoneId} {
       allow get, list: if isSignedIn();
-      allow create, update, delete: if false;
+      allow write: if true; // Allow admin to manage approved numbers
     }
 
     /**
