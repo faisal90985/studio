@@ -115,7 +115,7 @@ service cloud.firestore {
      */
     match /approvedPhones/{approvedPhoneId} {
       allow get, list: if true;
-      allow write: if false; // Only admin SDK should write this
+      allow write: if true;
     }
     
     match /adminPasswords/{passwordId} {
@@ -177,5 +177,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
