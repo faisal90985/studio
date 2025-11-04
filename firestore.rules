@@ -54,7 +54,7 @@ service cloud.firestore {
      * @principle Public read access with role-based writes for advertisements.
      */
     match /advertisements/{advertisementId} {
-      allow get, list: if isSignedIn();
+      allow get, list: if true;
       allow create: if isSignedIn() && isApprovedPhone();
       allow update, delete: if false;
     }
