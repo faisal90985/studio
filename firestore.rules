@@ -121,7 +121,7 @@ service cloud.firestore {
     /**
      * @description Allows any authenticated user to read management passwords. Restricts write access.
      * @path /managementPasswords/{managementPasswordId}
-     * @allow (get, list): Any authenticated user (including anonymous) can read management passwords for client-side validation.
+     * @allow (get, list): Any user (including anonymous) can read management passwords for client-side validation.
      * @deny (create, update, delete): No user can create, update, or delete management passwords.
      * @principle Read access for auth checks, restricted write access.
      */
@@ -187,5 +187,3 @@ service cloud.firestore {
     }
   }
 }
-
-    

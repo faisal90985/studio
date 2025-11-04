@@ -2,8 +2,6 @@ import type { NamazTimings, PostType } from './types';
 
 export const AD_EXPIRY_HOURS = 24;
 
-export const adminPassword = "423060Saima";
-
 export const namazTimings: NamazTimings = {
     fajr: '06:10',
     zuhar: '13:30',
