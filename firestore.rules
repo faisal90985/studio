@@ -109,13 +109,23 @@ service cloud.firestore {
     /**
      * @description Restricts write access to approved phone numbers. Allows read for any authenticated user.
      * @path /approvedPhones/{approvedPhoneId}
-     * @allow (get, list): Any authenticated user can read approved phone numbers.
+     * @allow (get, list): Any user can read approved phone numbers.
      * @deny (create, update, delete): No user can create, update, or delete approved phone numbers.
      * @principle Restricts write access to prevent unauthorized ad creation.
      */
     match /approvedPhones/{approvedPhoneId} {
-      allow get, list: if isSignedIn();
-      allow write: if true; // Allow admin to manage approved numbers
+      allow get, list: if true;
+      allow write: if false; // Only admin SDK should write this
+    }
+    
+    match /adminPasswords/{passwordId} {
+        allow get, list: if true;
+        allow create, update, delete: if false;
+    }
+
+    match /martPasswords/{passwordId} {
+        allow get, list: if true;
+        allow create, update, delete: if false;
     }
 
     /**
@@ -167,3 +177,5 @@ service cloud.firestore {
     }
   }
 }
+
+    
