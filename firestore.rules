@@ -16,7 +16,7 @@ service cloud.firestore {
     match /advertisements/{advertisementId} {
       allow get, list: if true;
       allow create: if isSignedIn();
-      allow update, delete: if false;
+      allow update, delete: if isSignedIn(); // Allow updates/deletes if signed in, app logic will verify owner
     }
 
     match /managementPosts/{managementPostId} {
@@ -28,23 +28,23 @@ service cloud.firestore {
       allow get, list: if true;
       allow create: if isSignedIn();
       allow update: if isSignedIn();
-      allow delete: if false;
+      allow delete: if isSignedIn(); // Allow deletes if signed in, app logic will verify owner
     }
 
     match /emergencyContacts/{emergencyContactId} {
       allow get, list: if true;
       allow create: if isSignedIn();
-      allow update, delete: if false;
+      allow update, delete: if isSignedIn();
     }
 
     match /approvedPhones/{approvedPhoneId} {
-      allow get: if true;
-      allow list, write: if true;
+      allow get, list: if isSignedIn();
+      allow write: if isSignedIn();
     }
 
     match /managementPasswords/{managementPasswordId} {
-      allow get, list: if true;
-      allow write: if false;
+      allow get: if isSignedIn();
+      allow list, write: if false;
     }
 
     match /martStatus/{martStatusId} {
