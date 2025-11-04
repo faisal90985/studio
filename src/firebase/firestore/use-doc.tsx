@@ -91,11 +91,11 @@ export function useDoc<T = any>(
         const contextualError = new FirestorePermissionError({
           operation: 'get',
           path: memoizedDocRef.path,
-        })
+        });
 
-        safeSetError(contextualError)
-        safeSetData(null)
-        safeSetIsLoading(false)
+        safeSetError(contextualError);
+        safeSetData(null);
+        safeSetIsLoading(false);
 
         errorEmitter.emit('permission-error', contextualError);
       }
