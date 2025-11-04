@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import type { AuthProps } from '@/app/lib/types';
 import { Separator } from '@/components/ui/separator';
-import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { ADMIN_PASSWORD, MANAGEMENT_PASSWORD } from '@/app/lib/passwords';
 
 const AdminTab = ({
   isAdminLoggedIn,
@@ -23,14 +24,11 @@ const AdminTab = ({
   const { toast } = useToast();
   const firestore = useFirestore();
 
-  const adminPasswordQuery = useMemoFirebase(() => firestore ? doc(firestore, 'adminPasswords', 'password') : null, [firestore]);
-  const { data: adminPasswordDoc } = useDoc<{password: string}>(adminPasswordQuery);
-
   const approvedPhonesQuery = useMemoFirebase(() => firestore ? collection(firestore, 'approvedPhones') : null, [firestore]);
   const { data: approvedPhones, isLoading: phonesLoading } = useCollection(approvedPhonesQuery);
 
   const handleAdminLogin = () => {
-    if (adminPasswordDoc && password === adminPasswordDoc.password) {
+    if (password === ADMIN_PASSWORD) {
       setIsAdminLoggedIn(true);
       toast({ title: "Admin login successful." });
     } else {
@@ -61,11 +59,10 @@ const AdminTab = ({
   };
   
   const handleSetManagementPassword = () => {
-    if (!firestore) return;
-    if (newMgmtPassword) {
-        const mgmtPassRef = doc(firestore, 'managementPasswords', 'password');
-        setDocumentNonBlocking(mgmtPassRef, { password: newMgmtPassword }, {});
-        toast({ title: "Management password updated successfully." });
+     if (!firestore) return;
+     if (newMgmtPassword) {
+        console.warn("Management password should be set in src/app/lib/passwords.ts. This form is for demonstration and does not persist changes securely.");
+        toast({ title: "Set password in `passwords.ts`", description: "For this change to be permanent, please update the MANAGEMENT_PASSWORD in the code.", variant: 'default' });
         setNewMgmtPassword('');
     } else {
         toast({ title: "Please enter a new password.", variant: "destructive" });
@@ -139,7 +136,7 @@ const AdminTab = ({
       <Card>
         <CardHeader>
             <CardTitle className="font-headline text-lg">Management Access</CardTitle>
-            <CardDescription>Set the password for the management panel.</CardDescription>
+            <CardDescription>Set the password for the management panel. Current: {MANAGEMENT_PASSWORD}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
              <div className="flex gap-2">
@@ -151,6 +148,7 @@ const AdminTab = ({
                 />
                 <Button onClick={handleSetManagementPassword}>Set Password</Button>
             </div>
+             <p className="text-xs text-muted-foreground pt-2">Note: To permanently change the management password, you must edit the `src/app/lib/passwords.ts` file.</p>
         </CardContent>
       </Card>
       

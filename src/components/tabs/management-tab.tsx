@@ -11,9 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { postTypes } from '@/app/lib/data';
 import type { ManagementPost, AuthProps, PostType } from '@/app/lib/types';
 import ManagementPostCard from '@/components/management-post-card';
-import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
 import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { MANAGEMENT_PASSWORD } from '@/app/lib/passwords';
 
 const ManagementTab = ({ 
     isManagementLoggedIn, 
@@ -37,12 +38,9 @@ const ManagementTab = ({
   const [content, setContent] = useState('');
   const [type, setType] = useState<PostType | ''>('');
   
-  const managementPasswordQuery = useMemoFirebase(() => firestore ? doc(firestore, 'managementPasswords', 'password') : null, [firestore]);
-  const { data: managementPasswordDoc } = useDoc<{password: string}>(managementPasswordQuery);
-
 
   const handleManagementLogin = () => {
-      if (managementPasswordDoc && password === managementPasswordDoc.password) {
+      if (password === MANAGEMENT_PASSWORD) {
         setIsManagementLoggedIn(true);
         toast({ title: "Management login successful." });
       } else {

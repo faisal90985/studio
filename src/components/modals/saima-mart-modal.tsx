@@ -8,9 +8,10 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { martStatuses, type MartStatus, type AuthProps } from '@/app/lib/types';
-import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
+import { useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { MART_OWNER_PASSWORD } from '@/app/lib/passwords';
 
 interface SaimaMartModalProps extends Omit<AuthProps, 'isManagementLoggedIn' | 'setIsManagementLoggedIn'> {
   isOpen: boolean;
@@ -23,9 +24,6 @@ const SaimaMartModal = ({ isOpen, onOpenChange, martStatus, setMartStatus, isAdm
   const [password, setPassword] = useState('');
   const { toast } = useToast();
   const firestore = useFirestore();
-
-  const martOwnerPasswordQuery = useMemoFirebase(() => firestore ? doc(firestore, 'martPasswords', 'password') : null, [firestore]);
-  const { data: martOwnerPasswordDoc } = useDoc<{password: string}>(martOwnerPasswordQuery);
 
   const canManage = isMartOwnerLoggedIn || isAdminLoggedIn;
 
@@ -59,7 +57,7 @@ const SaimaMartModal = ({ isOpen, onOpenChange, martStatus, setMartStatus, isAdm
   };
 
   const handleLogin = () => {
-    if (martOwnerPasswordDoc && password === martOwnerPasswordDoc.password) {
+    if (password === MART_OWNER_PASSWORD) {
       setIsMartOwnerLoggedIn(true);
       toast({ title: 'Mart owner login successful.' });
       setPassword('');
