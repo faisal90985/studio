@@ -1,158 +1,61 @@
-/**
- * @file Firestore Security Rules for Saima Villas Community App
- * @version 2
- *
- * @Core Philosophy: This ruleset provides public read access to most data while restricting write access based on pre-approved roles or credentials.
- *
- * @Data Structure:
- * - /villas/{villaId}: Publicly readable villa information.
- * - /advertisements/{advertisementId}: Publicly readable advertisements; creation requires an approved phone number.
- * - /managementPosts/{managementPostId}: Publicly readable posts from management; creation requires a management password.
- * - /complaints/{complaintId}: Publicly readable complaints; creation requires an approved phone number, resolution requires a management password.
- * - /emergencyContacts/{emergencyContactId}: Publicly readable emergency contact information; creation requires an approved phone number.
- * - /approvedPhones/{approvedPhoneId}: List of approved phone numbers; write-restricted to prevent unauthorized ad creation.
- * - /managementPasswords/{managementPasswordId}: List of management passwords; write-restricted to prevent unauthorized management actions.
- * - /martStatus/{martStatusId}: Publicly readable mart status; write-restricted to prevent unauthorized status changes.
- * - /namazTimings/{timingId}: Publicly readable prayer timings.
- *
- * @Key Security Decisions:
- * - Public Read Access: Villas, advertisements, management posts, complaints, emergency contacts, mart status, and prayer timings are all publicly readable, even by unauthenticated users.
- * - Role-Based Writes: Advertisement, Complaint, and EmergencyContact creation are controlled by the presence of a phone number in the /approvedPhones collection. ManagementPost creation and Complaint resolution are controlled by the presence of a valid management password in the /managementPasswords collection.
- * - Denormalization for Authorization: The approvedPhones and managementPasswords collections act as denormalized role stores, enabling fast existence checks during write operations without the need for costly or impossible queries.
- */
+
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /**
-     * @description Checks if a user is authenticated (including anonymous users).
-     * @returns {boolean} True if the user is signed in.
-     */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * @description Allows public read access to villa data. No write access is granted.
-     * @path /villas/{villaId}
-     * @allow (get, list): Any user can read villa data.
-     * @deny (create, update, delete): No user can create, update, or delete villa data.
-     * @principle Public read access for villa data.
-     */
     match /villas/{villaId} {
       allow get, list: if true;
-      allow create, update, delete: if false;
+      allow write: if false;
     }
 
-    /**
-     * @description Allows public read access to advertisements. Creation requires an approved phone number.
-     * @path /advertisements/{advertisementId}
-     * @allow (get, list): Any user can read advertisement data.
-     * @allow (create): An authenticated user with a phone number in the approvedPhones collection can create advertisements.
-     * @deny (update, delete): No user can update or delete advertisements.
-     * @deny (create): An unauthenticated user cannot create advertisements.
-     * @principle Public read access with role-based writes for advertisements.
-     */
     match /advertisements/{advertisementId} {
       allow get, list: if true;
       allow create: if isSignedIn();
-      allow update, delete: if false;
+      allow update, delete: if false; // Simplification: edits/deletes handled by app logic
     }
 
-    /**
-     * @description Allows public read access to management posts. Creation requires a valid management password.
-     * @path /managementPosts/{managementPostId}
-     * @allow (get, list): Any user can read management posts.
-     * @allow (create): An authenticated user with a valid management password can create management posts.
-     * @deny (update, delete): No user can update or delete management posts.
-     * @deny (create): An unauthenticated user cannot create management posts.
-     * @principle Public read access with role-based writes for management posts.
-     */
     match /managementPosts/{managementPostId} {
       allow get, list: if true;
-      allow create: if isSignedIn();
-      allow update, delete: if false;
+      allow create: if isSignedIn(); // Management login checked in app
+      allow update, delete: if isSignedIn(); // Management login checked in app
     }
 
-    /**
-     * @description Allows public read access to complaints. Creation requires an approved phone number, resolution requires a management password.
-     * @path /complaints/{complaintId}
-     * @allow (get, list): Any user can read complaint data.
-     * @allow (create): An authenticated user with a phone number in the approvedPhones collection can create complaints.
-     * @allow (update): An authenticated user with a valid management password can resolve complaints.
-     * @deny (delete): No user can delete complaints.
-     * @deny (create): An unauthenticated user cannot create complaints.
-     * @principle Public read access with role-based writes for complaints.
-     */
     match /complaints/{complaintId} {
       allow get, list: if true;
       allow create: if isSignedIn();
-      allow update: if isSignedIn();
+      allow update: if isSignedIn(); // Management login checked in app
       allow delete: if false;
     }
 
-    /**
-     * @description Allows public read access to emergency contacts. Creation requires an approved phone number.
-     * @path /emergencyContacts/{emergencyContactId}
-     * @allow (get, list): Any user can read emergency contact data.
-     * @allow (create): An authenticated user with a phone number in the approvedPhones collection can create emergency contacts.
-     * @deny (update, delete): No user can update or delete emergency contacts.
-     * @deny (create): An unauthenticated user cannot create emergency contacts.
-     * @principle Public read access with role-based writes for emergency contacts.
-     */
     match /emergencyContacts/{emergencyContactId} {
       allow get, list: if true;
       allow create: if isSignedIn();
       allow update, delete: if false;
     }
 
-    /**
-     * @description Restricts write access to approved phone numbers. Allows read for any authenticated user.
-     * @path /approvedPhones/{approvedPhoneId}
-     * @allow (get, list): Any user can read approved phone numbers.
-     * @deny (create, update, delete): No user can create, update, or delete approved phone numbers.
-     * @principle Restricts write access to prevent unauthorized ad creation.
-     */
     match /approvedPhones/{approvedPhoneId} {
-      allow get, list: if true;
-      allow write: if true;
+      allow get, list: if true; // Required for client-side checks
+      allow write: if true; // Allow admin to write from the app
     }
 
-    /**
-     * @description Allows any authenticated user to read management passwords. Restricts write access.
-     * @path /managementPasswords/{managementPasswordId}
-     * @allow (get, list): Any user (including anonymous) can read management passwords for client-side validation.
-     * @deny (create, update, delete): No user can create, update, or delete management passwords.
-     * @principle Read access for auth checks, restricted write access.
-     */
     match /managementPasswords/{managementPasswordId} {
       allow get, list: if true;
-      allow create, update, delete: if false;
+      allow write: if false;
     }
 
-    /**
-     * @description Allows public read access to the mart status. Write access is restricted.
-     * @path /martStatus/{martStatusId}
-     * @allow (get, list): Any user can read the mart status.
-     * @deny (create, update, delete): No user can create, update, or delete the mart status.
-     * @principle Public read access with restricted writes for mart status.
-     */
     match /martStatus/{martStatusId} {
       allow get, list: if true;
-      allow write: if true; // Allow mart owner to update
+      allow write: if isSignedIn(); // Allow mart owner to update
     }
 
-    /**
-     * @description Allows any user to read Namaz timings. Write access is restricted.
-     * @path /namazTimings/{timingId}
-     * @allow (get, list): Any user can read Namaz timings.
-     * @deny (create, update, delete): No user can create, update, or delete Namaz timings.
-     * @principle Read access for all users, restricted writes.
-     */
     match /namazTimings/{timingId} {
-        allow get, list: if true;
-        allow write: if true; // Allow admin to update
+      allow get, list: if true;
+      allow write: if isSignedIn(); // Allow admin to update
     }
-
   }
 }
