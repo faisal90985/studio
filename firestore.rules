@@ -70,7 +70,7 @@ service cloud.firestore {
      */
     match /managementPosts/{managementPostId} {
       allow get, list: if true;
-      allow create: if isSignedIn() && isValidManagementPassword();
+      allow create: if isSignedIn();
       allow update, delete: if false;
     }
 
@@ -87,7 +87,7 @@ service cloud.firestore {
     match /complaints/{complaintId} {
       allow get, list: if true;
       allow create: if isSignedIn();
-      allow update: if isSignedIn() && isValidManagementPassword() && resource != null;
+      allow update: if isSignedIn();
       allow delete: if false;
     }
 
@@ -154,10 +154,5 @@ service cloud.firestore {
         allow write: if true; // Allow admin to update
     }
 
-    function isValidManagementPassword() {
-      // This is a placeholder. Real password validation should NOT be done in security rules.
-      // This logic is flawed and insecure.
-      return request.auth != null;
-    }
   }
 }
