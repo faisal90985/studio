@@ -21,8 +21,7 @@ service cloud.firestore {
 
     match /managementPosts/{managementPostId} {
       allow get, list: if true;
-      allow create: if isSignedIn();
-      allow update, delete: if isSignedIn();
+      allow create, update, delete: if isSignedIn();
     }
 
     match /complaints/{complaintId} {
@@ -39,8 +38,8 @@ service cloud.firestore {
     }
 
     match /approvedPhones/{approvedPhoneId} {
-      allow get, list: if true;
-      allow write: if true;
+      allow get: if true;
+      allow list, write: if true;
     }
 
     match /managementPasswords/{managementPasswordId} {
