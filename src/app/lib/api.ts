@@ -111,8 +111,7 @@ export const api = {
   getComplaints: () => fetchData('getComplaints'),
   postComplaint: (data: Record<string, any>) => postData('postComplaint', data),
   updateComplaint: (data: Record<string, any>) => postData('updateComplaint', data),
-  deleteComplaint: (data: Record
-<string, any>) => postData('deleteComplaint', data),
+  deleteComplaint: (data: Record<string, any>) => postData('deleteComplaint', data),
   updateComplaintStatus: (data: Record<string, any>) => postData('updateComplaintStatus', data),
 
   getManagementPosts: () => fetchData('getManagementPosts'),
