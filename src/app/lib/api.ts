@@ -34,13 +34,12 @@ async function fetchData(action: string, params: Record<string, string> = {}) {
 async function postData(action: string, data: Record<string, any>) {
   try {
     const url = new URL(SCRIPT_URL);
-    url.searchParams.append('action', action);
-
-    // Using URLSearchParams to correctly encode the body for 'application/x-www-form-urlencoded'
+    
     const body = new URLSearchParams();
+    body.append('action', action); // Add action to the body
+
     for (const key in data) {
         const value = data[key];
-        // Ensure value is not null/undefined before appending
         if (value !== undefined && value !== null) {
             body.append(key, String(value));
         }
@@ -68,6 +67,7 @@ async function postData(action: string, data: Record<string, any>) {
     throw error;
   }
 }
+
 
 // --- Data Fetching Hooks and Functions ---
 
