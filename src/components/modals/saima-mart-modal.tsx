@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -8,23 +9,20 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { martStatuses, type MartStatus, type AuthProps } from '@/app/lib/types';
-import { useFirestore } from '@/firebase';
-import { doc } from 'firebase/firestore';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { api } from '@/app/lib/api';
 import { MART_OWNER_PASSWORD } from '@/app/lib/passwords';
 
 interface SaimaMartModalProps extends Omit<AuthProps, 'isManagementLoggedIn' | 'setIsManagementLoggedIn'> {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   martStatus: MartStatus;
-  setMartStatus: (status: MartStatus) => void;
+  onStatusUpdate: (newStatus: MartStatus) => void;
 }
 
-const SaimaMartModal = ({ isOpen, onOpenChange, martStatus, setMartStatus, isAdminLoggedIn, isMartOwnerLoggedIn, setIsMartOwnerLoggedIn }: SaimaMartModalProps) => {
+const SaimaMartModal = ({ isOpen, onOpenChange, martStatus, onStatusUpdate, isAdminLoggedIn, isMartOwnerLoggedIn, setIsMartOwnerLoggedIn }: SaimaMartModalProps) => {
   const [password, setPassword] = useState('');
   const { toast } = useToast();
-  const firestore = useFirestore();
-
+  
   const canManage = isMartOwnerLoggedIn || isAdminLoggedIn;
 
   const getStatusText = (status: MartStatus) => {
@@ -57,6 +55,7 @@ const SaimaMartModal = ({ isOpen, onOpenChange, martStatus, setMartStatus, isAdm
   };
 
   const handleLogin = () => {
+    // Note: The Apps Script uses 'faisalb108'
     if (password === MART_OWNER_PASSWORD) {
       setIsMartOwnerLoggedIn(true);
       toast({ title: 'Mart owner login successful.' });
@@ -71,17 +70,23 @@ const SaimaMartModal = ({ isOpen, onOpenChange, martStatus, setMartStatus, isAdm
     setIsMartOwnerLoggedIn(false);
   }
 
-  const handleStatusUpdate = (newStatus: MartStatus) => {
-    if (!firestore) return;
-    setMartStatus(newStatus);
-    const martStatusRef = doc(firestore, 'martStatus', 'status');
-    setDocumentNonBlocking(martStatusRef, { isOpen: newStatus, lastUpdated: Date.now() }, { merge: true });
+  const handleStatusUpdate = async (newStatus: MartStatus) => {
+    try {
+        const result = await api.updateMartStatus({ status: newStatus, password: MART_OWNER_PASSWORD });
+        if (result.success) {
+            onStatusUpdate(newStatus);
+            toast({title: 'Mart status updated!'});
+        } else {
+            throw new Error(result.error || 'Failed to update status.');
+        }
+    } catch (err: any) {
+        toast({ title: 'Error', description: err.message, variant: 'destructive'});
+    }
   }
 
   const handleOpenChange = (open: boolean) => {
     onOpenChange(open);
     if (!open) {
-      // Reset login state when modal is closed, unless admin is logged in globally
       if (!isAdminLoggedIn) {
         setIsMartOwnerLoggedIn(false);
       }

@@ -1,75 +1,83 @@
+
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { villaData } from '@/app/lib/villa-data';
-import type { Complaint, AuthProps, VillaData } from '@/app/lib/types';
+import type { Complaint, AuthProps } from '@/app/lib/types';
 import { PlusCircle, FileText } from 'lucide-react';
-import PhoneVerifyDialog from '@/components/modals/phone-verify-dialog';
 import ComplaintFormDialog from '@/components/modals/complaint-form-dialog';
 import ComplaintCard from '@/components/complaint-card';
-import { useFirestore, useCollection, useUser, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, doc } from 'firebase/firestore';
-import { addDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useSheetData, api } from '@/app/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
 const ComplaintsTab = ({ isAdminLoggedIn, isManagementLoggedIn }: AuthProps) => {
-  const firestore = useFirestore();
-  const { user } = useUser();
-  const [dialog, setDialog] = useState<'verify' | 'form' | null>(null);
+  const { toast } = useToast();
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingComplaint, setEditingComplaint] = useState<Complaint | null>(null);
-  const [verifiedPhone, setVerifiedPhone] = useState<string | null>(null);
 
-  const complaintsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'complaints'), orderBy('timestamp', 'desc'));
-  }, [firestore]);
-
-  const { data: complaints, isLoading } = useCollection<Complaint>(complaintsQuery);
+  const { data: complaints, isLoading, error, refetch } = useSheetData<Complaint[]>('getComplaints');
 
   const handlePostComplaintClick = () => {
     setEditingComplaint(null);
-    setDialog('verify');
-  };
-  
-  const handleVerifySuccess = (phone: string) => {
-    setVerifiedPhone(phone); // phone is not directly used for complaints but flow requires it
-    setDialog('form');
+    setIsFormOpen(true);
   };
 
-  const handleSaveComplaint = (newComplaint: Complaint) => {
-    if (!firestore) return;
-    if (editingComplaint) {
-      const complaintRef = doc(firestore, 'complaints', newComplaint.id);
-      setDocumentNonBlocking(complaintRef, newComplaint, { merge: true });
-    } else {
-      const complaintRef = doc(collection(firestore, 'complaints'), newComplaint.id);
-      setDocumentNonBlocking(complaintRef, newComplaint, {});
+  const handleSaveComplaint = async (complaintData: Partial<Complaint> & { pin: string }) => {
+    try {
+      const apiCall = editingComplaint ? api.updateComplaint : api.postComplaint;
+      const result = await apiCall({ ...complaintData, id: editingComplaint?.id });
+      if (result.success) {
+        toast({ title: `Complaint ${editingComplaint ? 'updated' : 'submitted'}!` });
+        refetch();
+      } else {
+        throw new Error(result.error || 'Failed to save complaint.');
+      }
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setIsFormOpen(false);
+      setEditingComplaint(null);
     }
-    setDialog(null);
-    setEditingComplaint(null);
   };
 
-  const handleDeleteComplaint = (id: string) => {
-    if (!firestore) return;
-    const complaintRef = doc(firestore, 'complaints', id);
-    deleteDocumentNonBlocking(complaintRef);
+  const handleDeleteComplaint = async (id: string, pin: string) => {
+    try {
+      const result = await api.deleteComplaint({ id, pin });
+      if (result.success) {
+        toast({ title: 'Complaint deleted.' });
+        refetch();
+      } else {
+        throw new Error(result.error || 'Failed to delete complaint.');
+      }
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
   };
-  
+
   const handleEditComplaint = (complaint: Complaint) => {
     setEditingComplaint(complaint);
-    setDialog('form');
+    setIsFormOpen(true);
   };
 
-  const handleStatusChange = (id: string, field: 'noted' | 'resolved', value: boolean) => {
-    if (!firestore) return;
-    const complaintRef = doc(firestore, 'complaints', id);
-    const updateData: any = { [field]: value };
-    if (field === 'resolved' && value) {
-      updateData.resolvedDate = Date.now();
+  const handleStatusChange = async (id: string, field: 'noted' | 'resolved', value: boolean) => {
+    try {
+        const result = await api.updateComplaintStatus({ id, [field]: value });
+        if(result.success) {
+            toast({ title: `Complaint status updated.` });
+            refetch();
+        } else {
+            throw new Error(result.error || 'Failed to update status.');
+        }
+    } catch (err: any) {
+         toast({ title: 'Error updating status', description: err.message, variant: 'destructive' });
     }
-    updateDocumentNonBlocking(complaintRef, updateData);
   };
+
+  const sortedComplaints = complaints 
+    ? [...complaints].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+    : [];
 
   return (
     <div className="space-y-6">
@@ -83,8 +91,9 @@ const ComplaintsTab = ({ isAdminLoggedIn, isManagementLoggedIn }: AuthProps) => 
         </CardHeader>
         <CardContent className="space-y-4">
           {isLoading && <p>Loading complaints...</p>}
-          {!isLoading && complaints && complaints.length > 0 ? (
-            complaints.map(complaint => (
+          {error && <p className="text-destructive text-center">Error loading complaints: {error.message}</p>}
+          {!isLoading && !error && sortedComplaints.length > 0 ? (
+            sortedComplaints.map(complaint => (
               <ComplaintCard
                 key={complaint.id}
                 complaint={complaint}
@@ -95,7 +104,7 @@ const ComplaintsTab = ({ isAdminLoggedIn, isManagementLoggedIn }: AuthProps) => 
               />
             ))
           ) : (
-            !isLoading && (
+            !isLoading && !error && (
             <div className="text-center text-muted-foreground py-10">
               <FileText className="mx-auto h-12 w-12" />
               <p className="mt-4">No complaints submitted yet.</p>
@@ -104,17 +113,15 @@ const ComplaintsTab = ({ isAdminLoggedIn, isManagementLoggedIn }: AuthProps) => 
           )}
         </CardContent>
       </Card>
-
-      <PhoneVerifyDialog
-        isOpen={dialog === 'verify'}
-        onOpenChange={(open) => !open && setDialog(null)}
-        onVerifySuccess={handleVerifySuccess}
-        purpose="post a complaint"
-      />
       
       <ComplaintFormDialog
-        isOpen={dialog === 'form'}
-        onOpenChange={(open) => !open && setDialog(null)}
+        isOpen={isFormOpen}
+        onOpenChange={(open) => {
+            if (!open) {
+                setIsFormOpen(false);
+                setEditingComplaint(null);
+            }
+        }}
         onSave={handleSaveComplaint}
         complaintToEdit={editingComplaint}
         villaData={villaData}

@@ -1,87 +1,74 @@
+
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { adCategories, type AdCategory, type AuthProps, type Ad } from '@/app/lib/types';
 import AdFormDialog from '@/components/modals/ad-form-dialog';
-import PhoneVerifyDialog from '@/components/modals/phone-verify-dialog';
 import AdCard from '@/components/ad-card';
 import { PlusCircle, Megaphone } from 'lucide-react';
-import { useFirestore, useCollection, useUser, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy, doc } from 'firebase/firestore';
-import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useSheetData, api } from '@/app/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
-const AdvertisementsTab = ({ isAdminLoggedIn, isManagementLoggedIn }: AuthProps) => {
-  const firestore = useFirestore();
-  const { user } = useUser();
+const AdvertisementsTab = ({ isAdminLoggedIn }: AuthProps) => {
+  const { toast } = useToast();
   const [selectedCategory, setSelectedCategory] = useState<AdCategory | 'All Ads'>('All Ads');
-  const [dialog, setDialog] = useState<'verify' | 'form' | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAd, setEditingAd] = useState<Ad | null>(null);
-  const [verifiedPhone, setVerifiedPhone] = useState<string | null>(null);
+
+  const { data: allAds, isLoading, error, refetch } = useSheetData<Ad[]>('getAds');
   
-  const adsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    const adsRef = collection(firestore, 'advertisements');
-    const now = Date.now();
-    if (selectedCategory === 'All Ads') {
-        return query(adsRef, where('expiry', '>', now), orderBy('expiry', 'desc'));
-    }
-    return query(adsRef, where('category', '==', selectedCategory), where('expiry', '>', now), orderBy('expiry', 'desc'));
-  }, [firestore, selectedCategory]);
-
-  const { data: ads, isLoading } = useCollection<Ad>(adsQuery);
-
   const handlePostAdClick = () => {
     setEditingAd(null);
-    if (isAdminLoggedIn || isManagementLoggedIn) {
-        setVerifiedPhone('admin'); // Use a placeholder for admin/mgmt
-        setDialog('form');
-    } else {
-        setDialog('verify');
+    setIsFormOpen(true);
+  };
+  
+  const handleSaveAd = async (adData: Partial<Ad> & { pin: string }) => {
+    try {
+      const apiCall = editingAd ? api.updateAd : api.postAd;
+      const result = await apiCall({ ...adData, id: editingAd?.id });
+
+      if (result.success) {
+        toast({ title: `Advertisement ${editingAd ? 'updated' : 'posted'}!` });
+        refetch(); // Refetch data to show the new/updated ad
+      } else {
+        throw new Error(result.error || 'Failed to save ad.');
+      }
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setIsFormOpen(false);
+      setEditingAd(null);
     }
   };
 
-  const handleVerifySuccess = (phone: string) => {
-    setVerifiedPhone(phone);
-    setDialog('form');
-  };
-
-  const handleSaveAd = (newAd: Ad) => {
-    if (!firestore) return;
-    const adRef = doc(firestore, 'advertisements', newAd.id);
-    if (editingAd) {
-      setDocumentNonBlocking(adRef, newAd, { merge: true });
-    } else {
-      setDocumentNonBlocking(adRef, newAd, {});
+  const handleDeleteAd = async (id: string, pin: string) => {
+    try {
+      const result = await api.deleteAd({ id, pin });
+      if (result.success) {
+        toast({ title: 'Ad deleted successfully.' });
+        refetch();
+      } else {
+        throw new Error(result.error || 'Failed to delete ad.');
+      }
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
     }
-    setDialog(null);
-    setEditingAd(null);
-    setVerifiedPhone(null);
-  };
-
-  const handleDeleteAd = (id: string) => {
-    if (!firestore) return;
-    const adRef = doc(firestore, 'advertisements', id);
-    deleteDocumentNonBlocking(adRef);
   };
   
   const handleEditAd = (ad: Ad) => {
     setEditingAd(ad);
-    if (isAdminLoggedIn || isManagementLoggedIn) {
-        setVerifiedPhone(ad.phone);
-        setDialog('form');
-    } else {
-        setVerifiedPhone(ad.phone);
-        setDialog('form');
-    }
+    setIsFormOpen(true);
   };
-  
-  const handleDialogClose = () => {
-    setDialog(null);
-    setEditingAd(null);
-    setVerifiedPhone(null);
-  }
+
+  const now = Date.now();
+  const filteredAds = allAds
+    ? allAds
+        .filter(ad => ad.expiry && ad.expiry > now)
+        .filter(ad => selectedCategory === 'All Ads' || ad.category === selectedCategory)
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+    : [];
 
   return (
     <div className="space-y-6">
@@ -115,18 +102,19 @@ const AdvertisementsTab = ({ isAdminLoggedIn, isManagementLoggedIn }: AuthProps)
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             {isLoading && <p>Loading ads...</p>}
-            {!isLoading && ads && ads.length > 0 ? (
-              ads.map(ad => (
+            {error && <p className="text-destructive col-span-full text-center">Error loading ads: {error.message}</p>}
+            {!isLoading && !error && filteredAds.length > 0 ? (
+              filteredAds.map(ad => (
                 <AdCard 
                   key={ad.id} 
                   ad={ad} 
                   onEdit={handleEditAd} 
                   onDelete={handleDeleteAd}
-                  isAdmin={isAdminLoggedIn || isManagementLoggedIn}
+                  isAdmin={isAdminLoggedIn}
                 />
               ))
             ) : (
-             !isLoading && (
+             !isLoading && !error && (
               <div className="col-span-full text-center text-muted-foreground py-10">
                 <Megaphone className="mx-auto h-12 w-12" />
                 <p className="mt-4">No advertisements in this category.</p>
@@ -136,19 +124,16 @@ const AdvertisementsTab = ({ isAdminLoggedIn, isManagementLoggedIn }: AuthProps)
           </div>
         </CardContent>
       </Card>
-
-      <PhoneVerifyDialog
-        isOpen={dialog === 'verify'}
-        onOpenChange={(open) => !open && handleDialogClose()}
-        onVerifySuccess={handleVerifySuccess}
-        purpose="post an ad"
-      />
       
       <AdFormDialog
-        isOpen={dialog === 'form'}
-        onOpenChange={(open) => !open && handleDialogClose()}
+        isOpen={isFormOpen}
+        onOpenChange={(open) => {
+            if (!open) {
+                setIsFormOpen(false);
+                setEditingAd(null);
+            }
+        }}
         onSave={handleSaveAd}
-        phone={verifiedPhone}
         adToEdit={editingAd}
       />
     </div>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -13,38 +14,28 @@ import MasjidModal from '@/components/modals/masjid-modal';
 import SaimaMartModal from '@/components/modals/saima-mart-modal';
 import { Button } from '@/components/ui/button';
 import type { Tab, MartStatus } from '@/app/lib/types';
-import { useUser, useDoc, useAuth, useFirestore, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
-import { signInAnonymously } from 'firebase/auth';
+import { useSheetData } from './lib/api';
 
+interface MartStatusData {
+  status: MartStatus;
+  lastUpdated: string;
+}
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('villa-locator');
   const [showMasjidModal, setShowMasjidModal] = useState(false);
   const [showSaimaMartModal, setShowSaimaMartModal] = useState(false);
+  
+  const { data: martStatusData, refetch: refetchMartStatus } = useSheetData<MartStatusData>('getMartStatus');
   const [martStatus, setMartStatus] = useState<MartStatus>('Closed');
-
-  const { user, isUserLoading } = useUser();
-  const auth = useAuth();
-  const firestore = useFirestore();
 
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [isManagementLoggedIn, setIsManagementLoggedIn] = useState(false);
   const [isMartOwnerLoggedIn, setIsMartOwnerLoggedIn] = useState(false);
 
-  // Sign in anonymously if not logged in
-  useEffect(() => {
-    if (!isUserLoading && !user && auth) {
-      signInAnonymously(auth);
-    }
-  }, [user, isUserLoading, auth]);
-
-  const martStatusRef = useMemoFirebase(() => firestore ? doc(firestore, 'martStatus', 'status') : null, [firestore]);
-  const { data: martStatusData } = useDoc<{ isOpen: MartStatus }>(martStatusRef);
-  
   useEffect(() => {
     if (martStatusData) {
-      setMartStatus(martStatusData.isOpen);
+      setMartStatus(martStatusData.status);
     }
   }, [martStatusData]);
 
@@ -58,9 +49,6 @@ export default function Home() {
   };
 
   const renderTabContent = () => {
-    if (isUserLoading) {
-      return <div className="flex justify-center items-center h-full">Loading...</div>;
-    }
     switch (activeTab) {
       case 'villa-locator':
         return <VillaLocatorTab {...authProps} />;
@@ -110,7 +98,10 @@ export default function Home() {
         isOpen={showSaimaMartModal} 
         onOpenChange={setShowSaimaMartModal}
         martStatus={martStatus}
-        setMartStatus={setMartStatus}
+        onStatusUpdate={(newStatus) => {
+            setMartStatus(newStatus);
+            refetchMartStatus();
+        }}
         {...authProps}
       />
 

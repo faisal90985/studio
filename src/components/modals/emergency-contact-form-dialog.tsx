@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from 'react-hook-form';
@@ -9,8 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useToast } from '@/hooks/use-toast';
-import { contactTypes, type EmergencyContact, type ContactType } from '@/app/lib/types';
+import { contactTypes, type EmergencyContact } from '@/app/lib/types';
 import { useEffect } from 'react';
 
 const contactSchema = z.object({
@@ -20,15 +20,16 @@ const contactSchema = z.object({
   description: z.string().max(200).optional(),
 });
 
+type ContactFormData = z.infer<typeof contactSchema>;
+
 interface EmergencyContactFormDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (contact: EmergencyContact) => void;
+  onSave: (contact: ContactFormData) => void;
 }
 
 const EmergencyContactFormDialog = ({ isOpen, onOpenChange, onSave }: EmergencyContactFormDialogProps) => {
-  const { toast } = useToast();
-  const form = useForm<z.infer<typeof contactSchema>>({
+  const form = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
     defaultValues: { name: '', phone: '', description: '' },
   });
@@ -45,14 +46,8 @@ const EmergencyContactFormDialog = ({ isOpen, onOpenChange, onSave }: EmergencyC
   }, [isOpen, form]);
 
 
-  const onSubmit = (data: z.infer<typeof contactSchema>) => {
-    const newContact: EmergencyContact = {
-      id: Date.now().toString(),
-      ...data,
-    };
-    onSave(newContact);
-    toast({ title: 'Emergency contact added successfully.' });
-    onOpenChange(false);
+  const onSubmit = (data: ContactFormData) => {
+    onSave(data);
   };
 
   return (

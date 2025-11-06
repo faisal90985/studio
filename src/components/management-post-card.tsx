@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +16,8 @@ interface ManagementPostCardProps {
 }
 
 const ManagementPostCard = ({ post, canManage, onEdit, onDelete }: ManagementPostCardProps) => {
+  const postDate = post.timestamp ? new Date(post.timestamp).toLocaleDateString() : 'recently';
+
   return (
     <Card>
       <CardHeader>
@@ -42,7 +45,7 @@ const ManagementPostCard = ({ post, canManage, onEdit, onDelete }: ManagementPos
         <p className="text-sm text-muted-foreground whitespace-pre-wrap">{post.content}</p>
       </CardContent>
       <CardFooter>
-        <CardDescription>Posted on: {new Date(post.timestamp).toLocaleDateString()}</CardDescription>
+        <CardDescription>Posted on: {postDate}</CardDescription>
       </CardFooter>
     </Card>
   );

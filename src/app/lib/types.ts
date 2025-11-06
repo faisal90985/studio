@@ -1,3 +1,4 @@
+
 export type Tab = 'villa-locator' | 'advertisements' | 'management' | 'complaints' | 'emergency' | 'admin';
 
 export interface Villa {
@@ -14,42 +15,39 @@ export interface VillaData {
 }
 
 export interface Ad {
-  id: string;
-  category: AdCategory;
+  id: string; // Changed from ID
   title: string;
   description:string;
   phone: string;
+  category: AdCategory;
   expiry: number;
-  // Car Pooling specific
-  poolTime?: string;
-  poolSeats?: string;
-  poolArea?: string;
-  poolCharges?: string;
-  poolCar?: string;
+  pin: string;
+  timestamp: string | Date;
 }
 
-export type AdCategory = "Property" | "Food" | "Ladies Items" | "Tution Center" | "Missing Goods" | "Health & Medicine" | "Car Pooling" | "Others" | "All Ads";
-
-export const adCategories: AdCategory[] = ["Property", "Food", "Ladies Items", "Tution Center", "Missing Goods", "Health & Medicine", "Car Pooling", "Others"];
+export type AdCategory = "Property" | "Food" | "Ladies Items" | "Tution Center" | "Missing Goods" | "Health & Medicine" | "Others" | "All Ads";
+// Removed "Car Pooling"
+export const adCategories: AdCategory[] = ["Property", "Food", "Ladies Items", "Tution Center", "Missing Goods", "Health & Medicine", "Others"];
 
 
 export interface Complaint {
-  id: string;
+  id: string; // Changed from ID
   villa: string;
   title: string;
   description: string;
-  timestamp: number;
   noted: boolean;
   resolved: boolean;
-  resolvedDate?: number;
+  resolvedDate?: string | Date;
+  pin: string;
+  timestamp: string | Date;
 }
 
 export interface ManagementPost {
-  id: string;
+  id: string; // Changed from ID
   type: PostType;
   title: string;
   content: string;
-  timestamp: number;
+  timestamp: string | Date;
 }
 
 export type PostType = "Announcement" | "Duty Timings" | "Maintenance" | "Future Plans" | "Progress Update" | "SOPs";
@@ -57,11 +55,14 @@ export const postTypes: PostType[] = ["Announcement", "Duty Timings", "Maintenan
 
 
 export interface EmergencyContact {
-  id: string;
+  id: string; // Changed from ID
   type: ContactType;
   name: string;
   phone: string;
   description: string;
+  likes: number;
+  dislikes: number;
+  timestamp: string | Date;
 }
 
 export type ContactType = "Plumber" | "Electrician" | "Maid" | "Carpenter" | "Painter" | "AC Repair" | "Security" | "Ambulance" | "Fire Brigade" | "Police" | "Other";
