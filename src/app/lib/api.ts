@@ -46,6 +46,7 @@ async function postData(action: string, data: Record<string, any>) {
     const response = await fetch(SCRIPT_URL, {
       method: 'POST',
       body: formData,
+      redirect: 'follow' // This is the crucial fix
     });
 
     if (!response.ok) {
