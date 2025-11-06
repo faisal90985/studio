@@ -33,24 +33,19 @@ async function fetchData(action: string, params: Record<string, string> = {}) {
 // Generic function to handle all POST requests
 async function postData(action: string, data: Record<string, any>) {
   try {
-    const url = new URL(SCRIPT_URL);
-    
-    const body = new URLSearchParams();
-    body.append('action', action); // Add action to the body
+    const formData = new FormData();
+    formData.append('action', action);
 
     for (const key in data) {
         const value = data[key];
         if (value !== undefined && value !== null) {
-            body.append(key, String(value));
+            formData.append(key, String(value));
         }
     }
 
-    const response = await fetch(url.toString(), {
+    const response = await fetch(SCRIPT_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: body.toString(),
+      body: formData,
     });
 
     if (!response.ok) {
