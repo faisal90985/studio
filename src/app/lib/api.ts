@@ -39,8 +39,10 @@ async function postData(action: string, data: Record<string, any>) {
     // Using URLSearchParams to correctly encode the body for 'application/x-www-form-urlencoded'
     const body = new URLSearchParams();
     for (const key in data) {
-        if (data[key] !== undefined && data[key] !== null) {
-            body.append(key, data[key].toString());
+        const value = data[key];
+        // Ensure value is not null/undefined before appending
+        if (value !== undefined && value !== null) {
+            body.append(key, String(value));
         }
     }
 
