@@ -25,7 +25,6 @@ export interface Ad {
 }
 
 export type AdCategory = "Property" | "Food" | "Ladies Items" | "Tution Center" | "Missing Goods" | "Health & Medicine" | "Others" | "All Ads";
-// Removed "Car Pooling"
 export const adCategories: AdCategory[] = ["Property", "Food", "Ladies Items", "Tution Center", "Missing Goods", "Health & Medicine", "Others"];
 
 
@@ -73,8 +72,8 @@ export interface NamazTimings {
   khadim: string;
 }
 
-export type MartStatus = "Open" | "Closed" | "Namaz Break" | "Lunch/Dinner Time";
-export const martStatuses: MartStatus[] = ["Open", "Closed", "Namaz Break", "Lunch/Dinner Time"];
+export type MartStatus = "Mart is Open" | "Mart is Closed" | "Namaz-Break" | "Lunch/Dinner Break";
+export const martStatuses: MartStatus[] = ["Mart is Open", "Mart is Closed", "Namaz-Break", "Lunch/Dinner Break"];
 
 
 export interface AuthProps {

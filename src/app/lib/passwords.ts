@@ -5,4 +5,4 @@
 
 export const ADMIN_PASSWORD = "423060Saima";
 export const MANAGEMENT_PASSWORD = "your_management_password_here"; // Replace with a secure password
-export const MART_OWNER_PASSWORD = "faisalb-108";
+export const MART_OWNER_PASSWORD = "faisalb108";

@@ -25,29 +25,14 @@ const SaimaMartModal = ({ isOpen, onOpenChange, martStatus, onStatusUpdate, isAd
   
   const canManage = isMartOwnerLoggedIn || isAdminLoggedIn;
 
-  const getStatusText = (status: MartStatus) => {
-    switch (status) {
-      case 'Open':
-        return 'The mart is currently open.';
-      case 'Closed':
-        return 'The mart is currently closed.';
-      case 'Namaz Break':
-        return 'The mart is temporarily closed for a Namaz break.';
-      case 'Lunch/Dinner Time':
-        return 'The mart is temporarily closed for a lunch/dinner break.';
-      default:
-        return 'The mart is currently closed.';
-    }
-  };
-
   const getStatusColor = (status: MartStatus) => {
     switch (status) {
-      case 'Open':
+      case 'Mart is Open':
         return 'bg-green-500';
-      case 'Closed':
+      case 'Mart is Closed':
         return 'bg-red-500';
-      case 'Namaz Break':
-      case 'Lunch/Dinner Time':
+      case 'Namaz-Break':
+      case 'Lunch/Dinner Break':
         return 'bg-yellow-500';
       default:
         return 'bg-red-500';
@@ -55,7 +40,6 @@ const SaimaMartModal = ({ isOpen, onOpenChange, martStatus, onStatusUpdate, isAd
   };
 
   const handleLogin = () => {
-    // Note: The Apps Script uses 'faisalb108'
     if (password === MART_OWNER_PASSWORD) {
       setIsMartOwnerLoggedIn(true);
       toast({ title: 'Mart owner login successful.' });
@@ -111,7 +95,7 @@ const SaimaMartModal = ({ isOpen, onOpenChange, martStatus, onStatusUpdate, isAd
               Mart Status
             </p>
             <p className="text-sm text-muted-foreground">
-              {getStatusText(martStatus)}
+              {martStatus}
             </p>
           </div>
           <div className={`w-4 h-4 rounded-full shadow-inner ${getStatusColor(martStatus)}`} />
