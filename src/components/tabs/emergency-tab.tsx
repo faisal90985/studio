@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 import type { AuthProps, EmergencyContact } from '@/app/lib/types';
 import EmergencyContactCard from '@/components/emergency-contact-card';
 import EmergencyContactFormDialog from '@/components/modals/emergency-contact-form-dialog';
@@ -16,7 +16,7 @@ const EmergencyTab = ({isAdminLoggedIn}: AuthProps) => {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const { data: contacts, isLoading, error, refetch } = useSheetData<EmergencyContact[]>('getEmergencyContacts');
 
-    const handleSaveContact = async (contactData: Omit<EmergencyContact, 'id' | 'likes' | 'dislikes' | 'timestamp'>) => {
+    const handleSaveContact = async (contactData: Omit<EmergencyContact, 'id' | 'timestamp'>) => {
         try {
             const result = await api.postEmergencyContact(contactData);
             if (result.success) {
@@ -29,20 +29,6 @@ const EmergencyTab = ({isAdminLoggedIn}: AuthProps) => {
             toast({ title: 'Error', description: err.message, variant: 'destructive' });
         } finally {
             setIsFormOpen(false);
-        }
-    }
-
-    const handleRating = async (id: string, type: 'like' | 'dislike') => {
-        try {
-            const result = await api.rateEmergencyContact(id, type);
-            if (result.success) {
-                toast({ title: 'Thank you for your feedback!' });
-                refetch();
-            } else {
-                throw new Error(result.error || 'Failed to submit rating.');
-            }
-        } catch (err: any) {
-            toast({ title: 'Error', description: err.message, variant: 'destructive' });
         }
     }
   
@@ -62,7 +48,7 @@ const EmergencyTab = ({isAdminLoggedIn}: AuthProps) => {
           {isLoading && <p>Loading contacts...</p>}
           {error && <p className="text-destructive text-center col-span-full">Error loading contacts: {error.message}</p>}
           {!isLoading && !error && contacts && contacts.map(contact => (
-            <EmergencyContactCard key={contact.id} contact={contact} onRate={handleRating} />
+            <EmergencyContactCard key={contact.id} contact={contact} />
           ))}
         </CardContent>
       </Card>

@@ -54,17 +54,12 @@ export const postTypes: PostType[] = ["Announcement", "Duty Timings", "Maintenan
 
 export interface EmergencyContact {
   id: string; // Changed from ID
-  type: ContactType;
+  type: string;
   name: string;
   phone: string;
   description: string;
-  likes: number;
-  dislikes: number;
   timestamp: string | Date;
 }
-
-export type ContactType = "Plumber" | "Electrician" | "Maid" | "Carpenter" | "Painter" | "AC Repair" | "Security" | "Ambulance" | "Fire Brigade" | "Police" | "Other";
-export const contactTypes: ContactType[] = ["Plumber", "Electrician", "Maid", "Carpenter", "Painter", "AC Repair", "Other"];
 
 export interface NamazTimings {
   fajr: string;

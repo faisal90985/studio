@@ -2,15 +2,14 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Phone, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Phone } from 'lucide-react';
 import type { EmergencyContact } from '@/app/lib/types';
 
 interface EmergencyContactCardProps {
   contact: EmergencyContact;
-  onRate: (id: string, type: 'like' | 'dislike') => void;
 }
 
-const EmergencyContactCard = ({ contact, onRate }: EmergencyContactCardProps) => {
+const EmergencyContactCard = ({ contact }: EmergencyContactCardProps) => {
   return (
     <Card className="flex flex-col">
       <CardHeader>
@@ -27,16 +26,6 @@ const EmergencyContactCard = ({ contact, onRate }: EmergencyContactCardProps) =>
                 {contact.phone}
             </a>
         </Button>
-        <div className="flex w-full gap-2 pt-2">
-            <Button variant="outline" className="w-full" onClick={() => onRate(contact.id, 'like')}>
-                <ThumbsUp className="mr-2 h-4 w-4"/>
-                ({contact.likes})
-            </Button>
-             <Button variant="outline" className="w-full" onClick={() => onRate(contact.id, 'dislike')}>
-                <ThumbsDown className="mr-2 h-4 w-4"/>
-                ({contact.dislikes})
-            </Button>
-        </div>
       </CardFooter>
     </Card>
   );

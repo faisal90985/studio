@@ -8,13 +8,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { contactTypes, type EmergencyContact } from '@/app/lib/types';
+import type { EmergencyContact } from '@/app/lib/types';
 import { useEffect } from 'react';
 
 const contactSchema = z.object({
-  type: z.enum(contactTypes, { required_error: "Please select a contact type." }),
+  type: z.string().min(3, "Category is required.").max(50),
   name: z.string().min(3, "Name is required.").max(50),
   phone: z.string().min(10, "A valid phone number is required."),
   description: z.string().max(200).optional(),
@@ -31,16 +30,16 @@ interface EmergencyContactFormDialogProps {
 const EmergencyContactFormDialog = ({ isOpen, onOpenChange, onSave }: EmergencyContactFormDialogProps) => {
   const form = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
-    defaultValues: { name: '', phone: '', description: '' },
+    defaultValues: { type: '', name: '', phone: '', description: '' },
   });
 
   useEffect(() => {
     if (isOpen) {
       form.reset({
+        type: '',
         name: '',
         phone: '',
         description: '',
-        type: undefined,
       });
     }
   }, [isOpen, form]);
@@ -59,24 +58,7 @@ const EmergencyContactFormDialog = ({ isOpen, onOpenChange, onSave }: EmergencyC
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-             <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Contact Type</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger><SelectValue placeholder="Select a type" /></SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {contactTypes.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+             <FormField control={form.control} name="type" render={({ field }) => (<FormItem><FormLabel>Category / Type</FormLabel><FormControl><Input placeholder="e.g., Plumber, Electrician" {...field} /></FormControl><FormMessage /></FormItem>)} />
             <FormField control={form.control} name="name" render={({ field }) => (<FormItem><FormLabel>Contact Name</FormLabel><FormControl><Input placeholder="e.g., Ali Ahmed" {...field} /></FormControl><FormMessage /></FormItem>)} />
             <FormField control={form.control} name="phone" render={({ field }) => (<FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input type="tel" placeholder="0300-1234567" {...field} /></FormControl><FormMessage /></FormItem>)} />
             <FormField control={form.control} name="description" render={({ field }) => (<FormItem><FormLabel>Description/Notes (Optional)</FormLabel><FormControl><Textarea placeholder="e.g., 24/7 service, reasonable rates" {...field} /></FormControl><FormMessage /></FormItem>)} />

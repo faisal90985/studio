@@ -119,7 +119,6 @@ export const api = {
 
   getEmergencyContacts: () => fetchData('getEmergencyContacts'),
   postEmergencyContact: (data: Record<string, any>) => postData('postEmergencyContact', data),
-  rateEmergencyContact: (id: string, type: 'like' | 'dislike') => postData('rateEmergencyContact', { id, type }),
 
   getMartStatus: () => fetchData('getMartStatus'),
   updateMartStatus: (data: Record<string, any>) => postData('updateMartStatus', data),
