@@ -56,6 +56,7 @@ const SaimaMartModal = ({ isOpen, onOpenChange, martStatus, onStatusUpdate, isAd
 
   const handleStatusUpdate = async (newStatus: MartStatus) => {
     try {
+        // Pass both status and password to the API call
         const result = await api.updateMartStatus({ status: newStatus, password: MART_OWNER_PASSWORD });
         if (result.success) {
             onStatusUpdate(newStatus);
