@@ -31,14 +31,13 @@ const ComplaintsTab = ({ isAdminLoggedIn, isManagementLoggedIn }: AuthProps) => 
       if (result.success) {
         toast({ title: `Complaint ${editingComplaint ? 'updated' : 'submitted'}!` });
         refetch();
+        setIsFormOpen(false);
+        setEditingComplaint(null);
       } else {
-        throw new Error(result.error || 'Failed to save complaint.');
+        throw new Error(result.error || 'Failed to save complaint. Check your PIN if editing.');
       }
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
-    } finally {
-      setIsFormOpen(false);
-      setEditingComplaint(null);
     }
   };
 

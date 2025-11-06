@@ -32,14 +32,13 @@ const AdvertisementsTab = ({ isAdminLoggedIn }: AuthProps) => {
       if (result.success) {
         toast({ title: `Advertisement ${editingAd ? 'updated' : 'posted'}!` });
         refetch(); // Refetch data to show the new/updated ad
+        setIsFormOpen(false);
+        setEditingAd(null);
       } else {
-        throw new Error(result.error || 'Failed to save ad.');
+        throw new Error(result.error || 'Failed to save ad. Check your PIN if editing.');
       }
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
-    } finally {
-      setIsFormOpen(false);
-      setEditingAd(null);
     }
   };
 
