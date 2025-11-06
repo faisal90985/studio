@@ -49,7 +49,7 @@ const ComplaintsTab = ({ isAdminLoggedIn, isManagementLoggedIn }: AuthProps) => 
         toast({ title: 'Complaint deleted.' });
         refetch();
       } else {
-        throw new Error(result.error || 'Failed to delete complaint.');
+        throw new Error(result.error || 'Failed to delete complaint. Check your PIN.');
       }
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });

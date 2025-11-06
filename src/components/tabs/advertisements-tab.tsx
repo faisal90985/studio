@@ -45,11 +45,14 @@ const AdvertisementsTab = ({ isAdminLoggedIn }: AuthProps) => {
 
   const handleDeleteAd = async (id: string, pin: string) => {
     try {
+      // The pin verification happens in the Google Apps Script.
+      // We pass the id and pin to the API.
       const result = await api.deleteAd({ id, pin });
       if (result.success) {
         toast({ title: 'Ad deleted successfully.' });
         refetch();
       } else {
+        // If success is false, the script returned an error (e.g., invalid PIN)
         throw new Error(result.error || 'Failed to delete ad.');
       }
     } catch (err: any) {
