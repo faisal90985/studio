@@ -15,49 +15,26 @@ import { useToast } from '@/hooks/use-toast';
 const ComplaintsTab = ({ isAdminLoggedIn, isManagementLoggedIn }: AuthProps) => {
   const { toast } = useToast();
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingComplaint, setEditingComplaint] = useState<Complaint | null>(null);
 
   const { data: complaints, isLoading, error, refetch } = useSheetData<Complaint[]>('getComplaints');
 
   const handlePostComplaintClick = () => {
-    setEditingComplaint(null);
     setIsFormOpen(true);
   };
 
-  const handleSaveComplaint = async (complaintData: Partial<Complaint> & { pin: string }) => {
+  const handleSaveComplaint = async (complaintData: Partial<Complaint>) => {
     try {
-      const apiCall = editingComplaint ? api.updateComplaint : api.postComplaint;
-      const result = await apiCall({ ...complaintData, id: editingComplaint?.id });
+      const result = await api.postComplaint(complaintData);
       if (result.success) {
-        toast({ title: `Complaint ${editingComplaint ? 'updated' : 'submitted'}!` });
+        toast({ title: `Complaint submitted!` });
         refetch();
         setIsFormOpen(false);
-        setEditingComplaint(null);
       } else {
-        throw new Error(result.error || 'Failed to save complaint. Check your PIN if editing.');
+        throw new Error(result.error || 'Failed to save complaint.');
       }
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     }
-  };
-
-  const handleDeleteComplaint = async (id: string, pin: string) => {
-    try {
-      const result = await api.deleteComplaint({ id, pin });
-      if (result.success) {
-        toast({ title: 'Complaint deleted.' });
-        refetch();
-      } else {
-        throw new Error(result.error || 'Failed to delete complaint. Check your PIN.');
-      }
-    } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
-    }
-  };
-
-  const handleEditComplaint = (complaint: Complaint) => {
-    setEditingComplaint(complaint);
-    setIsFormOpen(true);
   };
 
   const handleStatusChange = async (id: string, field: 'noted' | 'resolved', value: boolean) => {
@@ -96,8 +73,6 @@ const ComplaintsTab = ({ isAdminLoggedIn, isManagementLoggedIn }: AuthProps) => 
               <ComplaintCard
                 key={complaint.id}
                 complaint={complaint}
-                onEdit={handleEditComplaint}
-                onDelete={handleDeleteComplaint}
                 onStatusChange={handleStatusChange}
                 canManage={isAdminLoggedIn || isManagementLoggedIn}
               />
@@ -115,14 +90,8 @@ const ComplaintsTab = ({ isAdminLoggedIn, isManagementLoggedIn }: AuthProps) => 
       
       <ComplaintFormDialog
         isOpen={isFormOpen}
-        onOpenChange={(open) => {
-            if (!open) {
-                setIsFormOpen(false);
-                setEditingComplaint(null);
-            }
-        }}
+        onOpenChange={setIsFormOpen}
         onSave={handleSaveComplaint}
-        complaintToEdit={editingComplaint}
         villaData={villaData}
       />
     </div>

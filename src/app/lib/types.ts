@@ -21,7 +21,6 @@ export interface Ad {
   phone: string;
   category: AdCategory;
   expiry: number;
-  pin: string;
   timestamp: string | Date;
 }
 
@@ -38,7 +37,6 @@ export interface Complaint {
   noted: boolean;
   resolved: boolean;
   resolvedDate?: string | Date;
-  pin: string;
   timestamp: string | Date;
 }
 

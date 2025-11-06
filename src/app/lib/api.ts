@@ -105,13 +105,9 @@ export function useSheetData<T>(action: string) {
 export const api = {
   getAds: () => fetchData('getAds'),
   postAd: (data: Record<string, any>) => postData('postAd', data),
-  updateAd: (data: Record<string, any>) => postData('updateAd', data),
-  deleteAd: (data: Record<string, any>) => postData('deleteAd', data),
-
+  
   getComplaints: () => fetchData('getComplaints'),
   postComplaint: (data: Record<string, any>) => postData('postComplaint', data),
-  updateComplaint: (data: Record<string, any>) => postData('updateComplaint', data),
-  deleteComplaint: (data: Record<string, any>) => postData('deleteComplaint', data),
   updateComplaintStatus: (data: Record<string, any>) => postData('updateComplaintStatus', data),
 
   getManagementPosts: () => fetchData('getManagementPosts'),

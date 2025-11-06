@@ -15,55 +15,29 @@ const AdvertisementsTab = ({ isAdminLoggedIn }: AuthProps) => {
   const { toast } = useToast();
   const [selectedCategory, setSelectedCategory] = useState<AdCategory | 'All Ads'>('All Ads');
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingAd, setEditingAd] = useState<Ad | null>(null);
 
   const { data: allAds, isLoading, error, refetch } = useSheetData<Ad[]>('getAds');
   
   const handlePostAdClick = () => {
-    setEditingAd(null);
     setIsFormOpen(true);
   };
   
-  const handleSaveAd = async (adData: Partial<Ad> & { pin: string }) => {
+  const handleSaveAd = async (adData: Partial<Ad>) => {
     try {
-      const apiCall = editingAd ? api.updateAd : api.postAd;
-      const result = await apiCall({ ...adData, id: editingAd?.id });
+      const result = await api.postAd(adData);
 
       if (result.success) {
-        toast({ title: `Advertisement ${editingAd ? 'updated' : 'posted'}!` });
+        toast({ title: `Advertisement posted!` });
         refetch(); // Refetch data to show the new/updated ad
         setIsFormOpen(false);
-        setEditingAd(null);
       } else {
-        throw new Error(result.error || 'Failed to save ad. Check your PIN if editing.');
-      }
-    } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
-    }
-  };
-
-  const handleDeleteAd = async (id: string, pin: string) => {
-    try {
-      // The pin verification happens in the Google Apps Script.
-      // We pass the id and pin to the API.
-      const result = await api.deleteAd({ id, pin });
-      if (result.success) {
-        toast({ title: 'Ad deleted successfully.' });
-        refetch();
-      } else {
-        // If success is false, the script returned an error (e.g., invalid PIN)
-        throw new Error(result.error || 'Failed to delete ad.');
+        throw new Error(result.error || 'Failed to save ad.');
       }
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     }
   };
   
-  const handleEditAd = (ad: Ad) => {
-    setEditingAd(ad);
-    setIsFormOpen(true);
-  };
-
   const now = Date.now();
   const filteredAds = allAds
     ? allAds
@@ -110,9 +84,6 @@ const AdvertisementsTab = ({ isAdminLoggedIn }: AuthProps) => {
                 <AdCard 
                   key={ad.id} 
                   ad={ad} 
-                  onEdit={handleEditAd} 
-                  onDelete={handleDeleteAd}
-                  isAdmin={isAdminLoggedIn}
                 />
               ))
             ) : (
@@ -129,14 +100,8 @@ const AdvertisementsTab = ({ isAdminLoggedIn }: AuthProps) => {
       
       <AdFormDialog
         isOpen={isFormOpen}
-        onOpenChange={(open) => {
-            if (!open) {
-                setIsFormOpen(false);
-                setEditingAd(null);
-            }
-        }}
+        onOpenChange={setIsFormOpen}
         onSave={handleSaveAd}
-        adToEdit={editingAd}
       />
     </div>
   );
